@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../api";
 import { sourceKindLabel } from "../format";
 import type { Fact, JobState, ObservationIn, Segment, Source } from "../types";
+import { IconCamera, IconSave } from "../icons";
 import Recorder from "./Recorder";
 
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
@@ -209,15 +210,18 @@ export default function SourcePanel(props: Props) {
           />
           <button
             type="button"
+            className="btn btn-secondary"
             disabled={busy || submitting || voice !== null}
             onClick={() => fileInput.current?.click()}
           >
+            <IconCamera />
             Add a photo
           </button>
           {photoDraft ? (
             <>
               <button
-                className="primary"
+                className="btn btn-primary"
+                type="button"
                 disabled={busy || submitting}
                 onClick={() => {
                   void (async () => {
@@ -233,10 +237,12 @@ export default function SourcePanel(props: Props) {
                   })();
                 }}
               >
-                {submitting ? "Updating your job\u2026" : caption.trim() ? "Save photo" : "Save photo"}
+                <IconSave />
+                {submitting ? "Updating your job\u2026" : "Save photo"}
               </button>
               <button
                 className="link"
+                type="button"
                 disabled={submitting}
                 onClick={() => {
                   URL.revokeObjectURL(photoDraft.url);
@@ -249,12 +255,18 @@ export default function SourcePanel(props: Props) {
               </button>
             </>
           ) : (
-            <button className="primary" onClick={() => void submit()} disabled={busy || submitting || !text.trim()}>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => void submit()}
+              disabled={busy || submitting || !text.trim()}
+            >
+              <IconSave />
               {submitting ? "Updating your job\u2026" : "Save note"}
             </button>
           )}
           {voice && (
-            <button className="link" onClick={() => void discardVoice()} disabled={submitting}>
+            <button className="link" type="button" onClick={() => void discardVoice()} disabled={submitting}>
               Discard
             </button>
           )}
@@ -310,7 +322,7 @@ function SourceItem(props: {
   const replaced = s.replaced_by !== null;
 
   return (
-    <li className={`source ${replaced ? "replaced" : ""} ${selected ? "has-selection" : ""}`}>
+    <li id={`source-${s.id}`} className={`source ${replaced ? "replaced" : ""} ${selected ? "has-selection" : ""}`}>
       <div className="source-head">
         <strong>S{s.id}</strong>
         <span className="tag">{sourceKindLabel(s.kind)}</span>

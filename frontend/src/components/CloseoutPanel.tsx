@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../api";
+import { IconPlus, IconPrinter } from "../icons";
 import {
   attachedPhotos,
   canPrepareCompleted,
@@ -220,7 +221,8 @@ export default function CloseoutPanel(props: Props) {
             </p>
           </div>
           <div className="row">
-            <button type="button" onClick={props.onNewJob} disabled={props.busy}>
+            <button className="btn btn-secondary" type="button" onClick={props.onNewJob} disabled={props.busy}>
+              <IconPlus />
               New job
             </button>
             <button type="button" onClick={props.onClose}>
@@ -353,7 +355,8 @@ export default function CloseoutPanel(props: Props) {
                 src={api.reportHtmlUrl(job.job.id, reportOpts)}
               />
               <div className="row print-actions">
-                <button type="button" className="primary" disabled={printing} onClick={() => void printPdf()}>
+                <button type="button" className="btn btn-primary" disabled={printing} onClick={() => void printPdf()}>
+                  <IconPrinter />
                   {printing ? "Preparing PDF\u2026" : "Print / Save as PDF"}
                 </button>
                 <p className="muted small print-hint">Choose ‘Save as PDF’ in the print window.</p>

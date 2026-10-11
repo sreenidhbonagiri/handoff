@@ -46,6 +46,7 @@ export default function FactsPanel(props: Props) {
             const badge = requirementBadge(r, job);
             return (
               <li
+                id={`req-${r.id}`}
                 key={r.id}
                 className={`req ${r.status}`}
                 onClick={() => r.fact_ids[0] && props.onSelectFact(r.fact_ids[0])}
@@ -79,6 +80,7 @@ export default function FactsPanel(props: Props) {
           <summary>Earlier versions ({history.length})</summary>
           {history.map((f) => (
             <div
+              id={`fact-${f.id}`}
               key={f.id}
               className={`fact superseded ${props.selectedFactId === f.id ? "selected" : ""}`}
               onClick={() => props.onSelectFact(f.id)}
@@ -127,6 +129,7 @@ export function FactCard(props: Props & { fact: Fact }) {
 
   return (
     <div
+      id={`fact-${f.id}`}
       className={[
         "fact",
         pending ? "conflicting" : "",

@@ -4,7 +4,8 @@ import Dashboard from "./components/Dashboard";
 import JobWorkspace from "./components/JobWorkspace";
 import Landing from "./components/Landing";
 import { clearDrafts, confirmLeaveJob, hasUnsavedDrafts } from "./drafts";
-import { dashboardPath, jobPath, landingPath, parseRoute, type Route } from "./route";
+import SiteMap from "./components/SiteMap";
+import { dashboardPath, jobPath, landingPath, mapPath, parseRoute, type Route } from "./route";
 import type { Health, JobListItem, JobState } from "./types";
 
 export default function App() {
@@ -40,9 +41,20 @@ export default function App() {
     else window.history.pushState({ name: "dashboard" }, "", path);
   }, []);
 
+  const showMap = useCallback((replace = false) => {
+    wantedId.current = null;
+    clearDrafts();
+    setJob(null);
+    setRoute({ name: "map" });
+    const path = mapPath();
+    if (replace) window.history.replaceState({ name: "map" }, "", path);
+    else window.history.pushState({ name: "map" }, "", path);
+  }, []);
+
   useEffect(() => {
     if (route.name === "landing") document.title = "Handoff";
     else if (route.name === "dashboard") document.title = "Jobs · Handoff";
+    else if (route.name === "map") document.title = "Site map · Handoff";
     else document.title = `Job ${route.id} · Handoff`;
   }, [route]);
 
@@ -112,9 +124,11 @@ export default function App() {
     return () => window.removeEventListener("beforeunload", onBefore);
   }, []);
 
-  const leaveJob = () => {
+  const leaveJob = (to: "dashboard" | "map" | "landing" = "dashboard") => {
     if (!confirmLeaveJob()) return;
-    showDashboard();
+    if (to === "map") showMap();
+    else if (to === "landing") showLanding();
+    else showDashboard();
   };
 
   const openJob = (id: number) => {
@@ -153,7 +167,19 @@ export default function App() {
         onJob={(next) => {
           if (wantedId.current === next.job.id) setJob(next);
         }}
-        onAllJobs={leaveJob}
+        onAllJobs={() => leaveJob("dashboard")}
+        onMap={() => leaveJob("map")}
+        onHome={() => leaveJob("landing")}
+      />
+    );
+  }
+
+  if (route.name === "map") {
+    return (
+      <SiteMap
+        onOpenJob={openJob}
+        onJobs={() => showDashboard()}
+        onHome={() => showLanding()}
       />
     );
   }
@@ -177,6 +203,7 @@ export default function App() {
         onOpen={openJob}
         onCreate={(title, location) => void createJob(title, location)}
         onHome={() => showLanding()}
+        onMap={() => showMap()}
         creating={creating}
       />
     </div>

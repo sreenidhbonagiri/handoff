@@ -8,6 +8,7 @@ DATA_DIR = BACKEND_DIR / "data"
 DB_PATH = Path(os.environ.get("FIELDPILOT_DB", BACKEND_DIR / "fieldpilot.db"))
 AUDIO_DIR = Path(os.environ.get("FIELDPILOT_AUDIO_DIR", DATA_DIR / "audio"))
 PHOTO_DIR = Path(os.environ.get("FIELDPILOT_PHOTO_DIR", DATA_DIR / "photos"))
+SITE_DIR = Path(os.environ.get("FIELDPILOT_SITE_DIR", DATA_DIR / "site"))
 CHECKLIST_PATH = Path(os.environ.get("FIELDPILOT_CHECKLIST", DATA_DIR / "checklist.json"))
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")

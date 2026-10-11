@@ -59,6 +59,63 @@ export interface JobListItem {
   facts: Fact[];
 }
 
+export type PinStatus = "open_problem" | "needs_attention" | "no_open_items";
+
+export interface JobPin {
+  job_id: number;
+  x: number;
+  y: number;
+}
+
+export interface SitePlan {
+  name: string | null;
+  image_name: string;
+  width: number;
+  height: number;
+  created_at: string;
+}
+
+export interface MapJobItem {
+  job: Job;
+  facts: Fact[];
+  checklist: RequirementStatus[] | null;
+  pin: JobPin | null;
+  status: PinStatus | null;
+  status_error: string | null;
+}
+
+export interface SiteMapState {
+  plan: SitePlan | null;
+  jobs: MapJobItem[];
+}
+
+export type AskTurnKind = "job" | "general" | "greeting" | "clarification";
+export type AskItemKind = "missing_information" | "from_record" | "message";
+
+export interface AskHistoryMessage {
+  role: "user" | "assistant";
+  text: string;
+}
+
+export interface AskItem {
+  text: string;
+  kind: AskItemKind;
+  source_ids: number[];
+  fact_ids: number[];
+  requirement_ids: string[];
+  related_fact_ids: number[];
+}
+
+export interface AskAnswer {
+  job_id: number;
+  question: string;
+  kind: AskTurnKind;
+  items: AskItem[];
+  truncated: boolean;
+  model: string;
+  wall_ms: number | null;
+}
+
 export interface Source {
   id: number;
   job_id: number;

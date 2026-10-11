@@ -7,8 +7,16 @@ export function pendingFacts(job: Pick<JobState, "facts">): Fact[] {
   return job.facts.filter((f) => f.active && PENDING.has(f.review_status));
 }
 
-export function openChecks(job: JobState): RequirementStatus[] {
+export function openChecks(job: Pick<JobState, "checklist">): RequirementStatus[] {
   return job.checklist.filter((r) => OPEN_CHECK.has(r.status));
+}
+
+export type PinStatus = "open_problem" | "needs_attention" | "no_open_items";
+
+export function pinStatus(job: Pick<JobState, "facts" | "checklist">): PinStatus {
+  if (unresolvedIssues(job).length > 0) return "open_problem";
+  if (pendingFacts(job).length > 0 || openChecks(job).length > 0) return "needs_attention";
+  return "no_open_items";
 }
 
 export function unresolvedIssues(job: Pick<JobState, "facts">): Fact[] {

@@ -46,6 +46,7 @@ export default function Landing({ onOpenWorkspace }: Props) {
                 See how it works
               </a>
             </div>
+            <p className="muted small hero-note">Local AI · Works offline after setup</p>
           </div>
           <aside className="product-demo" aria-label="Example workflow illustration">
             <p className="example-label">Example workflow</p>
@@ -57,8 +58,8 @@ export default function Landing({ onOpenWorkspace }: Props) {
               <li>
                 <span className="badge reported_complete">Reported done</span>
                 <div>
-                  <p>Replace 3 × filter</p>
-                  <p className="corr">Correction retained: 2 → 3</p>
+                  <p>3 filters replaced</p>
+                  <p className="corr">Quantity corrected from 2 to 3</p>
                 </div>
               </li>
               <li>

@@ -1,9 +1,10 @@
-import type { FactState, Health, JobListItem, JobState, ObservationIn, TranscribeOut } from "./types";
+import type { AskAnswer, AskHistoryMessage, FactState, Health, JobListItem, JobPin, JobState, ObservationIn, SiteMapState, TranscribeOut } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(path, {
     ...init,
     headers: init?.body instanceof FormData ? init.headers : { "Content-Type": "application/json", ...init?.headers },
+    signal: init?.signal,
   });
   if (!resp.ok) {
     let detail = resp.statusText;
@@ -55,6 +56,25 @@ export const api = {
     const resp = await fetch(`/api/recordings/${encodeURIComponent(name)}/discard`, { method: "POST", keepalive: true });
     if (!resp.ok && resp.status !== 404) throw new Error(`${resp.status}: could not delete the discarded recording`);
   },
+  getSiteMap: () => request<SiteMapState>("/api/site-map"),
+  uploadSiteMap: (file: File, name: string, confirmReplace = false) => {
+    const form = new FormData();
+    form.append("plan", file, file.name);
+    form.append("name", name);
+    form.append("confirm_replace", confirmReplace ? "true" : "false");
+    return request<SiteMapState>("/api/site-map", { method: "POST", body: form });
+  },
+  siteMapImageUrl: () => `/api/site-map/image?t=${Date.now()}`,
+  placePin: (jobId: number, x: number, y: number) => post<JobPin>("/api/site-map/pins", { job_id: jobId, x, y }),
+  movePin: (jobId: number, x: number, y: number) =>
+    request<JobPin>(`/api/site-map/pins/${jobId}`, { method: "PATCH", body: JSON.stringify({ x, y }) }),
+  removePin: (jobId: number) => request<{ removed: boolean }>(`/api/site-map/pins/${jobId}`, { method: "DELETE" }),
+  askJob: (id: number, question: string, history: AskHistoryMessage[] = [], signal?: AbortSignal) =>
+    request<AskAnswer>(`/api/jobs/${id}/ask`, {
+      method: "POST",
+      body: JSON.stringify({ question, history }),
+      signal,
+    }),
   reportHtmlUrl: (id: number, opts?: { mode?: "completed" | "handoff"; note?: string }) =>
     reportUrl(id, "html", opts),
   reportJsonUrl: (id: number, opts?: { mode?: "completed" | "handoff"; note?: string }) =>

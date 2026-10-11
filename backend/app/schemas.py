@@ -139,6 +139,34 @@ class HandoffNoteIn(BaseModel):
     note: str = Field(default="", max_length=4000)
 
 
+class SitePlan(BaseModel):
+    name: str | None
+    image_name: str
+    width: int
+    height: int
+    created_at: str
+
+
+class JobPin(BaseModel):
+    job_id: int
+    x: float
+    y: float
+
+
+class PinIn(BaseModel):
+    job_id: int
+    x: float
+    y: float
+
+
+class PinMoveIn(BaseModel):
+    x: float
+    y: float
+
+
+PinStatus = Literal["open_problem", "needs_attention", "no_open_items"]
+
+
 class Source(BaseModel):
     id: int
     job_id: int
@@ -237,6 +265,53 @@ class JobListItem(BaseModel):
 
     job: Job
     facts: list[Fact]
+
+
+class MapJobItem(BaseModel):
+    job: Job
+    facts: list[Fact]
+    checklist: list[RequirementStatus] | None
+    pin: JobPin | None
+    status: PinStatus | None
+    status_error: str | None = None
+
+
+class SiteMapState(BaseModel):
+    plan: SitePlan | None
+    jobs: list[MapJobItem]
+
+
+class AskHistoryMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    text: str = Field(min_length=1, max_length=800)
+
+
+class AskIn(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+    history: list[AskHistoryMessage] = Field(default_factory=list, max_length=12)
+
+
+AskTurnKind = Literal["job", "general", "greeting", "clarification"]
+AskItemKind = Literal["missing_information", "from_record", "message"]
+
+
+class AskItem(BaseModel):
+    text: str
+    kind: AskItemKind = "from_record"
+    source_ids: list[int] = []
+    fact_ids: list[int] = []
+    requirement_ids: list[str] = []
+    related_fact_ids: list[int] = []
+
+
+class AskAnswer(BaseModel):
+    job_id: int
+    question: str
+    kind: AskTurnKind
+    items: list[AskItem]
+    truncated: bool
+    model: str
+    wall_ms: float | None = None
 
 
 class Health(BaseModel):

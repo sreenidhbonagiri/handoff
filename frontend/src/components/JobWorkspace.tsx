@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { setDraftDirty } from "../drafts";
 import { equipmentLine, hasJobNotes, jobTitle } from "../format";
-import type { FactState, Health, JobState, ObservationIn } from "../types";
+import type { AskItem, FactState, Health, JobState, ObservationIn } from "../types";
+import { IconBot, IconClipboardCheck } from "../icons";
+import AppNav from "./AppNav";
+import AskPanel from "./AskPanel";
 import BrandLogo from "./BrandLogo";
 import CloseoutPanel from "./CloseoutPanel";
 import FactsPanel from "./FactsPanel";
@@ -17,6 +20,8 @@ interface Props {
   health: Health | null;
   onJob: (next: JobState) => void;
   onAllJobs: () => void;
+  onMap: () => void;
+  onHome: () => void;
 }
 
 export default function JobWorkspace(props: Props) {
@@ -27,6 +32,7 @@ export default function JobWorkspace(props: Props) {
   const [error, setError] = useState<string | null>(null);
   const [flashIds, setFlashIds] = useState<Set<number>>(new Set());
   const [closeoutOpen, setCloseoutOpen] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
   const [title, setTitle] = useState(job.job.title);
   const [location, setLocation] = useState(job.job.location ?? "");
   const knownFactIds = useRef<Set<number>>(new Set(job.facts.map((f) => f.id)));
@@ -41,6 +47,7 @@ export default function JobWorkspace(props: Props) {
     inFlight.current = false;
     setSelectedFactId(null);
     setCloseoutOpen(false);
+    setAskOpen(false);
     setTitle(job.job.title);
     setLocation(job.job.location ?? "");
     setError(null);
@@ -149,10 +156,44 @@ export default function JobWorkspace(props: Props) {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="job-heading">
-          <div className="brand">
+        <div className="topbar-main">
+          <a
+            className="logo-link"
+            href="/"
+            aria-label="Handoff home"
+            onClick={(e) => {
+              e.preventDefault();
+              props.onHome();
+            }}
+          >
             <BrandLogo size="app" />
+          </a>
+          <div className="topbar-tools">
+            {busy && (
+              <span className="busy" role="status" aria-live="polite">
+                {busy}
+              </span>
+            )}
+            <AppNav current="jobs" onHome={props.onHome} onJobs={props.onAllJobs} onMap={props.onMap} />
+            <div className="topbar-actions">
+              <button type="button" className="btn btn-assistant" onClick={() => setAskOpen(true)}>
+                <IconBot />
+                Ask Handoff
+                <span className="ai-badge">AI</span>
+              </button>
+              <button
+                ref={reviewButton}
+                className="btn btn-primary"
+                type="button"
+                onClick={() => setCloseoutOpen(true)}
+              >
+                <IconClipboardCheck />
+                Review before leaving
+              </button>
+            </div>
           </div>
+        </div>
+        <div className="job-identity">
           <h1>Job {jobId}</h1>
           <p className="asset-line">
             {jobTitle(job.job.title)}
@@ -199,24 +240,6 @@ export default function JobWorkspace(props: Props) {
               />
             </label>
           </div>
-        </div>
-        <div className="topbar-right">
-          {busy && (
-            <span className="busy" role="status" aria-live="polite">
-              {busy}
-            </span>
-          )}
-          <button type="button" onClick={props.onAllJobs}>
-            All jobs
-          </button>
-          <button
-            ref={reviewButton}
-            className="primary"
-            type="button"
-            onClick={() => setCloseoutOpen(true)}
-          >
-            Review before leaving
-          </button>
         </div>
       </header>
       {error && (
@@ -285,6 +308,37 @@ export default function JobWorkspace(props: Props) {
           voiceUnavailableReason={voiceUnavailableReason}
         />
       </main>
+      {askOpen && (
+        <AskPanel
+          jobId={jobId}
+          facts={job.facts}
+          checklist={job.checklist}
+          onClose={() => setAskOpen(false)}
+          onCite={(item: AskItem) => {
+            const factId = item.fact_ids[0];
+            const sourceId = item.source_ids[0];
+            const reqId = item.requirement_ids[0];
+            if (factId) setSelectedFactId(factId);
+            else if (sourceId) {
+              const fromSource = job.facts.find((f) => f.source_id === sourceId);
+              if (fromSource) setSelectedFactId(fromSource.id);
+            } else if (reqId) {
+              const req = job.checklist.find((r) => r.id === reqId);
+              if (req?.fact_ids[0]) setSelectedFactId(req.fact_ids[0]);
+            }
+            const target = factId
+              ? `fact-${factId}`
+              : sourceId
+                ? `source-${sourceId}`
+                : reqId
+                  ? `req-${reqId}`
+                  : null;
+            if (target) {
+              window.setTimeout(() => document.getElementById(target)?.scrollIntoView({ block: "nearest" }), 0);
+            }
+          }}
+        />
+      )}
       {closeoutOpen && (
         <CloseoutPanel
           job={job}

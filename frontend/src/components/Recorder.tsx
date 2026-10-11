@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { IconMic } from "../icons";
 import type { TranscribeOut } from "../types";
 
 interface Props {
@@ -118,13 +119,14 @@ export default function Recorder({ disabled, unavailableReason, onTranscript }: 
   return (
     <>
       <button
-        className={`ptt ${phase}`}
+        type="button"
+        className={`btn btn-secondary ptt ${phase}`}
         disabled={phase === "requesting" || phase === "transcribing" || (phase === "idle" && (disabled || !!unavailableReason))}
         title={unavailableReason ?? (phase === "recording" ? "Click to stop and transcribe" : "Click to start recording")}
         onClick={phase === "recording" ? stop : start}
         aria-live="polite"
       >
-        {phase === "recording" && <span className="rec-dot" aria-hidden />}
+        {phase === "recording" ? <span className="rec-dot" aria-hidden /> : <IconMic />}
         {label}
       </button>
       {unavailableReason && phase === "idle" && <span className="muted small">{unavailableReason}</span>}

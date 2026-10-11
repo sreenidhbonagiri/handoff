@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { pendingFacts, unresolvedIssues } from "../closeout";
 import { compactEquipment, compactMissing, equipmentLabel, jobLocation, jobTitle } from "../format";
+import { IconPlus } from "../icons";
 import type { JobListItem } from "../types";
+import AppNav from "./AppNav";
 import BrandLogo from "./BrandLogo";
 
 const PAGE_SIZE = 10;
@@ -13,6 +15,7 @@ interface Props {
   onOpen: (id: number) => void;
   onCreate: (title: string, location: string) => void;
   onHome: () => void;
+  onMap: () => void;
   creating: boolean;
 }
 
@@ -83,9 +86,9 @@ export default function Dashboard(props: Props) {
   return (
     <div className="dashboard">
       <header className="topbar">
-        <div className="job-heading">
+        <div className="topbar-main">
           <a
-            className="logo-link home-link"
+            className="logo-link"
             href="/"
             aria-label="Handoff home"
             onClick={(e) => {
@@ -95,22 +98,18 @@ export default function Dashboard(props: Props) {
           >
             <BrandLogo size="app" />
           </a>
-          <h1>Jobs</h1>
+          <div className="topbar-tools">
+            <AppNav current="jobs" onHome={props.onHome} onMap={props.onMap} />
+            <div className="topbar-actions">
+              <button className="btn btn-primary" type="button" onClick={() => setDialog(true)}>
+                <IconPlus />
+                New job
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="topbar-right">
-          <a
-            className="muted small home-link"
-            href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              props.onHome();
-            }}
-          >
-            Overview
-          </a>
-          <button className="primary" type="button" onClick={() => setDialog(true)}>
-            New job
-          </button>
+        <div className="page-identity">
+          <h1>Jobs</h1>
         </div>
       </header>
       <main className="dashboard-body compact-dash">
@@ -229,7 +228,8 @@ export default function Dashboard(props: Props) {
               </label>
             </div>
             <div className="row">
-              <button className="primary" type="submit" disabled={props.creating}>
+              <button className="btn btn-primary" type="submit" disabled={props.creating}>
+                <IconPlus />
                 {props.creating ? "Starting a new job…" : "New job"}
               </button>
               <button type="button" onClick={() => setDialog(false)}>

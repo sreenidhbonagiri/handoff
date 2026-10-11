@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import DB_PATH
-from .schemas import Fact, Job, Rejection, RunInfo, Segment, Source
+from .schemas import Fact, Job, JobPin, Rejection, RunInfo, Segment, SitePlan, Source
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
@@ -71,6 +71,20 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 CREATE INDEX IF NOT EXISTS idx_facts_job ON fact_revisions(job_id);
 CREATE INDEX IF NOT EXISTS idx_sources_job ON sources(job_id);
+CREATE TABLE IF NOT EXISTS site_plan (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    name TEXT,
+    image_name TEXT NOT NULL,
+    width INTEGER NOT NULL,
+    height INTEGER NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS job_pins (
+    job_id INTEGER PRIMARY KEY REFERENCES jobs(id),
+    x REAL NOT NULL,
+    y REAL NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 
@@ -341,3 +355,54 @@ def last_run(conn: sqlite3.Connection, job_id: int) -> tuple[RunInfo, list[Rejec
     d.pop("job_id")
     d["ok"] = bool(d["ok"])
     return RunInfo(**d), rejected
+
+
+def get_site_plan(conn: sqlite3.Connection) -> SitePlan | None:
+    row = conn.execute("SELECT name, image_name, width, height, created_at FROM site_plan WHERE id = 1").fetchone()
+    return SitePlan(**dict(row)) if row else None
+
+
+def set_site_plan(conn: sqlite3.Connection, name: str | None, image_name: str, width: int, height: int) -> SitePlan:
+    ts = now()
+    conn.execute("DELETE FROM job_pins")
+    conn.execute("DELETE FROM site_plan")
+    conn.execute(
+        "INSERT INTO site_plan (id, name, image_name, width, height, created_at) VALUES (1, ?, ?, ?, ?, ?)",
+        (name, image_name, width, height, ts),
+    )
+    conn.commit()
+    plan = get_site_plan(conn)
+    assert plan is not None
+    return plan
+
+
+def list_pins(conn: sqlite3.Connection) -> list[JobPin]:
+    rows = conn.execute("SELECT job_id, x, y FROM job_pins").fetchall()
+    return [JobPin(**dict(r)) for r in rows]
+
+
+def get_pin(conn: sqlite3.Connection, job_id: int) -> JobPin | None:
+    row = conn.execute("SELECT job_id, x, y FROM job_pins WHERE job_id = ?", (job_id,)).fetchone()
+    return JobPin(**dict(row)) if row else None
+
+
+def upsert_pin(conn: sqlite3.Connection, job_id: int, x: float, y: float) -> JobPin:
+    conn.execute(
+        """INSERT INTO job_pins (job_id, x, y, updated_at) VALUES (?, ?, ?, ?)
+           ON CONFLICT(job_id) DO UPDATE SET x = excluded.x, y = excluded.y, updated_at = excluded.updated_at""",
+        (job_id, x, y, now()),
+    )
+    conn.commit()
+    pin = get_pin(conn, job_id)
+    assert pin is not None
+    return pin
+
+
+def delete_pin(conn: sqlite3.Connection, job_id: int) -> bool:
+    cur = conn.execute("DELETE FROM job_pins WHERE job_id = ?", (job_id,))
+    conn.commit()
+    return cur.rowcount > 0
+
+
+def pin_count(conn: sqlite3.Connection) -> int:
+    return conn.execute("SELECT COUNT(*) FROM job_pins").fetchone()[0]

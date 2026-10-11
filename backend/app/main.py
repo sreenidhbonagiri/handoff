@@ -9,9 +9,24 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import db, llm, photos, pipeline, report, state
+from . import ask, db, llm, photos, pipeline, report, site_map, state
 from .config import FFMPEG, FRONTEND_DIST, MODEL, WHISPER_CLI, WHISPER_MODEL
-from .schemas import FactReviewIn, HandoffNoteIn, Health, JobListItem, JobState, ObservationIn, SourceEditIn
+from .schemas import (
+    AskAnswer,
+    AskIn,
+    FactReviewIn,
+    HandoffNoteIn,
+    Health,
+    JobListItem,
+    JobPin,
+    JobState,
+    ObservationIn,
+    PinIn,
+    PinMoveIn,
+    SiteMapState,
+    SitePlan,
+    SourceEditIn,
+)
 from .transcribe import router as transcribe_router
 from .transcribe import sweep_orphans
 
@@ -140,6 +155,11 @@ def save_handoff_note(job_id: int, body: HandoffNoteIn, conn: sqlite3.Connection
     return _state_or_error(pipeline.build_state, conn, job_id)
 
 
+@app.post("/api/jobs/{job_id}/ask", response_model=AskAnswer)
+def ask_about_job(job_id: int, body: AskIn, conn: sqlite3.Connection = Depends(get_conn)) -> AskAnswer:
+    return ask.answer_question(conn, job_id, body.question, body.history)
+
+
 @app.post("/api/jobs/{job_id}/facts/{fact_id}/confirm", response_model=JobState)
 def confirm_fact(job_id: int, fact_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> JobState:
     def run() -> JobState:
@@ -200,11 +220,81 @@ def report_json(
     return JSONResponse(report.build_json(st, mode=kind, handoff_note=handoff_note))
 
 
+@app.get("/api/site-map", response_model=SiteMapState)
+def get_site_map(conn: sqlite3.Connection = Depends(get_conn)) -> SiteMapState:
+    return site_map.load_state(conn)
+
+
+@app.post("/api/site-map", response_model=SiteMapState)
+def upload_site_map(
+    plan: UploadFile = File(...),
+    name: str = Form(""),
+    confirm_replace: bool = Form(False),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> SiteMapState:
+    site_map.replace_plan(conn, plan, name, confirm_replace)
+    return site_map.load_state(conn)
+
+
+@app.get("/api/site-map/image")
+def get_site_map_image(conn: sqlite3.Connection = Depends(get_conn)) -> FileResponse:
+    plan = db.get_site_plan(conn)
+    if plan is None:
+        raise HTTPException(404, "not found")
+    try:
+        path = site_map.plan_path(plan.image_name)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not path.exists():
+        raise HTTPException(404, "not found")
+    media = "image/png" if path.suffix == ".png" else "image/jpeg"
+    return FileResponse(path, media_type=media)
+
+
+@app.post("/api/site-map/pins", response_model=JobPin)
+def place_pin(body: PinIn, conn: sqlite3.Connection = Depends(get_conn)) -> JobPin:
+    if db.get_site_plan(conn) is None:
+        raise HTTPException(400, "Upload a floor plan before placing jobs.")
+    if db.get_job(conn, body.job_id) is None:
+        raise HTTPException(404, "not found")
+    try:
+        x, y = site_map.validate_coords(body.x, body.y)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return db.upsert_pin(conn, body.job_id, x, y)
+
+
+@app.patch("/api/site-map/pins/{job_id}", response_model=JobPin)
+def move_pin(job_id: int, body: PinMoveIn, conn: sqlite3.Connection = Depends(get_conn)) -> JobPin:
+    if db.get_pin(conn, job_id) is None:
+        raise HTTPException(404, "not found")
+    try:
+        x, y = site_map.validate_coords(body.x, body.y)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return db.upsert_pin(conn, job_id, x, y)
+
+
+@app.delete("/api/site-map/pins/{job_id}")
+def remove_pin(job_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, bool]:
+    if db.get_job(conn, job_id) is None:
+        raise HTTPException(404, "not found")
+    if not db.delete_pin(conn, job_id):
+        raise HTTPException(404, "not found")
+    return {"removed": True}
+
+
 def _spa_index() -> FileResponse:
     index = FRONTEND_DIST / "index.html"
     if not index.exists():
         raise HTTPException(404, "not found")
     return FileResponse(index)
+
+
+@app.get("/map")
+@app.get("/map/")
+def spa_map() -> FileResponse:
+    return _spa_index()
 
 
 @app.get("/jobs")

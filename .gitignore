@@ -6,6 +6,7 @@ frontend/dist/
 backend/*.db
 backend/data/audio/
 backend/data/photos/
+backend/data/site/
 models/
 evals/results/
 .env
