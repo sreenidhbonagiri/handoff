@@ -1,0 +1,173 @@
+[
+  {
+    "id": "dev01",
+    "title": "Explicit quantity correction",
+    "tags": ["correction"],
+    "turns": [{"text": "Asset RTU-12. Swapped four belts, sorry, two belts. Ran the final test and it passed. No other issues on the unit."}],
+    "expect": {
+      "facts": [
+        {"field": "asset_id", "value": "RTU-12", "state": "observed"},
+        {"field": "part_replaced", "item": "belt", "value": "2", "state": "reported_complete"},
+        {"field": "final_test", "value": "passed", "state": "reported_complete"}
+      ],
+      "absent": [{"field": "part_replaced", "item": "belt", "value": "4"}],
+      "checklist": {"R1": "reported", "R2": "reported", "R3": "reported", "R4": "reported", "R5": "not_applicable"},
+      "ready": true
+    }
+  },
+  {
+    "id": "dev02",
+    "title": "Planned test is not a completed test",
+    "tags": ["planned"],
+    "turns": [{"text": "Unit CH-2. Cleaned the condenser coil. I'll run the functional test once the compressor cools down."}],
+    "expect": {
+      "facts": [
+        {"field": "other_action", "item": "coil", "state": "reported_complete"},
+        {"field": "final_test", "state": "planned"}
+      ],
+      "absent": [{"field": "final_test", "state": "reported_complete"}],
+      "checklist": {"R3": "planned"},
+      "next_question": "R3",
+      "ready": false
+    }
+  },
+  {
+    "id": "dev03",
+    "title": "Part explicitly not replaced",
+    "tags": ["negation"],
+    "turns": [{"text": "Unit P-9. Didn't replace the impeller because we had none in stock. Tightened the mounting bolts."}],
+    "expect": {
+      "facts": [
+        {"field": "part_replaced", "item": "impeller", "state": "explicitly_not_complete"},
+        {"field": "other_action", "item": "bolt", "state": "reported_complete"}
+      ],
+      "absent": [{"field": "part_replaced", "item": "impeller", "state": "reported_complete"}],
+      "checklist": {"R3": "not_recorded"},
+      "ready": false
+    }
+  },
+  {
+    "id": "dev04",
+    "title": "Missing test result",
+    "tags": ["missing"],
+    "turns": [{"text": "Asset FCU-44, replaced one thermostat."}],
+    "expect": {
+      "facts": [
+        {"field": "asset_id", "value": "FCU-44", "state": "observed"},
+        {"field": "part_replaced", "item": "thermostat", "value": "1", "state": "reported_complete"}
+      ],
+      "absent": [{"field": "final_test", "state": "reported_complete"}],
+      "checklist": {"R2": "reported", "R3": "not_recorded"},
+      "next_question": "R3",
+      "ready": false
+    }
+  },
+  {
+    "id": "dev05",
+    "title": "Unresolved issue despite a successful test",
+    "tags": ["issue"],
+    "turns": [{"text": "Unit BL-5. Replaced the drive belt. The final test passed, but the bearing is still squealing."}],
+    "expect": {
+      "facts": [
+        {"field": "part_replaced", "item": "belt", "state": "reported_complete"},
+        {"field": "final_test", "value": "passed", "state": "reported_complete"},
+        {"field": "issue", "item": "squealing", "state": "unresolved"}
+      ],
+      "absent": [{"field": "issue", "item": "squealing", "state": "resolved"}],
+      "checklist": {"R3": "reported", "R4": "unresolved", "R5": "not_recorded"},
+      "ready": false
+    }
+  },
+  {
+    "id": "dev06",
+    "title": "Explicitly resolved issue",
+    "tags": ["issue"],
+    "turns": [
+      {"text": "Unit WH-1. There's a dripping leak at the inlet valve."},
+      {"text": "Replaced the valve gasket and the leak is gone now. Final test passed."}
+    ],
+    "expect": {
+      "facts": [
+        {"field": "issue", "item": "leak", "state": "resolved"},
+        {"field": "part_replaced", "item": "gasket", "state": "reported_complete"},
+        {"field": "final_test", "value": "passed", "state": "reported_complete"}
+      ],
+      "absent": [{"field": "issue", "item": "leak", "state": "unresolved"}],
+      "checklist": {"R4": "reported", "R5": "not_applicable"},
+      "ready": true
+    }
+  },
+  {
+    "id": "dev07",
+    "title": "Conflicting quantities without an explicit correction",
+    "tags": ["conflict"],
+    "turns": [
+      {"text": "Asset AC-30. Replaced two capacitors."},
+      {"text": "Replaced three capacitors."}
+    ],
+    "expect": {
+      "facts": [{"field": "part_replaced", "item": "capacitor", "review_status": "conflicting"}],
+      "absent": [],
+      "checklist": {"R2": "conflicting"},
+      "next_question": "R2",
+      "ready": false
+    }
+  },
+  {
+    "id": "dev08",
+    "title": "Photo shows a different asset ID",
+    "skip": "camera OCR not implemented",
+    "turns": [],
+    "expect": {"facts": []}
+  },
+  {
+    "id": "dev09",
+    "title": "Unclear OCR requires confirmation",
+    "skip": "camera OCR not implemented",
+    "turns": [],
+    "expect": {"facts": []}
+  },
+  {
+    "id": "dev10",
+    "title": "Unrelated remark is ignored; other equipment problems may be recorded",
+    "note": "Nothing in the job context places the coffee machine outside this job, so recording it as an issue is allowed.",
+    "tags": ["unrelated"],
+    "turns": [{"text": "Unit EF-8. Traffic was terrible this morning and the coffee machine in the lobby is broken. Lubricated the fan motor bearings."}],
+    "expect": {
+      "facts": [
+        {"field": "asset_id", "value": "EF-8", "state": "observed"},
+        {"field": "other_action", "item": "lubricated", "state": "reported_complete"}
+      ],
+      "absent": [{"field": "issue", "item": "traffic"}],
+      "max_unexpected": 1,
+      "ready": false
+    }
+  },
+  {
+    "id": "dev11",
+    "title": "User correction to the transcript",
+    "tags": ["correction", "edit"],
+    "turns": [
+      {"text": "Unit HP-3. Replaced five fuses."},
+      {"edit_last": "Unit HP-3. Replaced two fuses."}
+    ],
+    "expect": {
+      "facts": [{"field": "part_replaced", "item": "fuse", "value": "2", "state": "reported_complete"}],
+      "absent": [{"field": "part_replaced", "item": "fuse", "value": "5"}],
+      "checklist": {"R2": "reported"},
+      "ready": false
+    }
+  },
+  {
+    "id": "dev12",
+    "title": "Request to mark complete without required evidence",
+    "tags": ["missing"],
+    "turns": [{"text": "Unit GN-6. Go ahead and mark this job complete."}],
+    "expect": {
+      "facts": [{"field": "asset_id", "value": "GN-6", "state": "observed"}],
+      "absent": [{"field": "final_test", "state": "reported_complete"}],
+      "checklist": {"R2": "not_recorded", "R3": "not_recorded"},
+      "ready": false
+    }
+  }
+]

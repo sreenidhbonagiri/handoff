@@ -1,0 +1,7 @@
+interface Props {
+  size?: "nav" | "app" | "footer";
+}
+
+export default function BrandLogo({ size = "nav" }: Props) {
+  return <img className={`brand-logo brand-logo-${size}`} src="/handoff-logo.png" alt="Handoff" />;
+}

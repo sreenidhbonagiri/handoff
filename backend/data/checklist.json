@@ -1,0 +1,11 @@
+{
+  "procedure_id": "sample-closeout-v1",
+  "title": "Sample closeout procedure (demonstration only, not manufacturer guidance)",
+  "requirements": [
+    {"id": "R1", "section": "1", "label": "Asset ID confirmed", "rule": "asset_id"},
+    {"id": "R2", "section": "2", "label": "Completed action and parts/quantity recorded", "rule": "completed_work"},
+    {"id": "R3", "section": "3", "label": "Final functional-test result recorded", "rule": "final_test"},
+    {"id": "R4", "section": "4", "label": "Remaining issue status recorded", "rule": "issue_status"},
+    {"id": "R5", "section": "5", "label": "Follow-up recorded when an issue remains", "rule": "follow_up_if_issue"}
+  ]
+}
