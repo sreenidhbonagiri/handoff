@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="frontend/public/handoff-logo.png" alt="Handoff" width="320" />
+<img src="docs/images/handoff-logo.png" alt="Handoff" width="320" />
 
 # Handoff
 
