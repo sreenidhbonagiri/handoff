@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:showcase": "VITE_PUBLIC_SHOWCASE=true vite build --config vite.showcase.config.ts && cp dist-showcase/showcase.html dist-showcase/index.html && cp dist-showcase/showcase.html dist-showcase/404.html",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },

@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 node_modules/
 frontend/dist/
+frontend/dist-showcase/
 backend/*.db
 backend/data/audio/
 backend/data/photos/

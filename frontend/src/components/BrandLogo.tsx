@@ -3,5 +3,11 @@ interface Props {
 }
 
 export default function BrandLogo({ size = "nav" }: Props) {
-  return <img className={`brand-logo brand-logo-${size}`} src="/handoff-logo.png" alt="Handoff" />;
+  return (
+    <img
+      className={`brand-logo brand-logo-${size}`}
+      src={`${import.meta.env.BASE_URL}handoff-logo.png`}
+      alt="Handoff"
+    />
+  );
 }

@@ -1,30 +1,44 @@
 import type { MouseEvent } from "react";
 import BrandLogo from "./BrandLogo";
 
+const REPO_URL = "https://github.com/sreenidhbonagiri/handoff";
+const SETUP_URL = `${REPO_URL}#run-locally`;
+const PUBLIC_SHOWCASE = import.meta.env.VITE_PUBLIC_SHOWCASE === "true";
+
 interface Props {
-  onOpenWorkspace: () => void;
+  onOpenWorkspace?: () => void;
 }
 
 export default function Landing({ onOpenWorkspace }: Props) {
+  const homeHref = import.meta.env.BASE_URL;
   const open = (e: MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    onOpenWorkspace();
+    onOpenWorkspace?.();
   };
 
   return (
     <div className="landing">
       <header className="landing-bar">
         <div className="landing-nav">
-          <a className="logo-link" href="/" aria-label="Handoff home">
+          <a className="logo-link" href={homeHref} aria-label="Handoff home">
             <BrandLogo size="nav" />
           </a>
           <nav>
             <a href="#how-it-works">How it works</a>
             <a href="#why-handoff">Why Handoff</a>
             <a href="#about">About</a>
-            <a className="button primary" href="/jobs" onClick={open}>
-              Open workspace
-            </a>
+            {PUBLIC_SHOWCASE ? (
+              <>
+                <a href={REPO_URL}>GitHub</a>
+                <a className="button primary" href={SETUP_URL}>
+                  Run locally
+                </a>
+              </>
+            ) : (
+              <a className="button primary" href="/jobs" onClick={open}>
+                Open workspace
+              </a>
+            )}
           </nav>
         </div>
       </header>
@@ -39,14 +53,31 @@ export default function Landing({ onOpenWorkspace }: Props) {
               open, and what needs to happen next—even without internet.
             </p>
             <div className="hero-actions">
-              <a className="button primary large" href="/jobs" onClick={open}>
-                Open workspace
-              </a>
-              <a className="text-link" href="#how-it-works">
-                See how it works
-              </a>
+              {PUBLIC_SHOWCASE ? (
+                <>
+                  <a className="button primary large" href={SETUP_URL}>
+                    Run locally
+                  </a>
+                  <a className="text-link" href={REPO_URL}>
+                    View on GitHub
+                  </a>
+                </>
+              ) : (
+                <>
+                  <a className="button primary large" href="/jobs" onClick={open}>
+                    Open workspace
+                  </a>
+                  <a className="text-link" href="#how-it-works">
+                    See how it works
+                  </a>
+                </>
+              )}
             </div>
-            <p className="muted small hero-note">Local AI · Works offline after setup</p>
+            <p className="muted small hero-note">
+              {PUBLIC_SHOWCASE
+                ? "This page is a public overview. Handoff is a local application you install and run on your computer."
+                : "Local AI · Works offline after setup"}
+            </p>
           </div>
           <aside className="product-demo" aria-label="Example workflow illustration">
             <p className="example-label">Example workflow</p>
@@ -230,28 +261,50 @@ export default function Landing({ onOpenWorkspace }: Props) {
               <dt>Does a completed report certify equipment safety?</dt>
               <dd>No. It records reported work and checks; it does not certify equipment safety.</dd>
             </div>
+            {PUBLIC_SHOWCASE && (
+              <div>
+                <dt>Can I open the job workspace from this website?</dt>
+                <dd>
+                  No. This site does not run the local API, models, or job database. Follow{" "}
+                  <a href={SETUP_URL}>Run locally</a> to install Handoff on your computer.
+                </dd>
+              </div>
+            )}
           </dl>
         </section>
 
         <section className="final-cta">
           <h2>Make the next handoff clearer.</h2>
-          <a className="button primary large" href="/jobs" onClick={open}>
-            Open workspace
-          </a>
+          {PUBLIC_SHOWCASE ? (
+            <a className="button primary large" href={SETUP_URL}>
+              Run locally
+            </a>
+          ) : (
+            <a className="button primary large" href="/jobs" onClick={open}>
+              Open workspace
+            </a>
+          )}
         </section>
       </main>
 
       <footer className="landing-footer">
-        <a className="logo-link" href="/" aria-label="Handoff home">
+        <a className="logo-link" href={homeHref} aria-label="Handoff home">
           <BrandLogo size="footer" />
         </a>
         <nav>
           <a href="#how-it-works">How it works</a>
           <a href="#why-handoff">Why Handoff</a>
           <a href="#about">About</a>
-          <a href="/jobs" onClick={open}>
-            Open workspace
-          </a>
+          {PUBLIC_SHOWCASE ? (
+            <>
+              <a href={REPO_URL}>GitHub</a>
+              <a href={SETUP_URL}>Run locally</a>
+            </>
+          ) : (
+            <a href="/jobs" onClick={open}>
+              Open workspace
+            </a>
+          )}
         </nav>
       </footer>
     </div>

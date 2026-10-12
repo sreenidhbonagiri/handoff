@@ -10,7 +10,7 @@ An on-device AI assistant for field technicians and skilled tradespeople.
 
 </div>
 
-Handoff runs on your computer after installation. A public landing page, if published, is only an overview. It does not host the job workspace, site map, or local models.
+Handoff runs on your computer after installation. The public GitHub Pages site, when enabled, is a static overview only. It does not host the job workspace, site map, or local models.
 
 ---
 
